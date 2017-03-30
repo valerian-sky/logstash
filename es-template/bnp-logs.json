@@ -1,0 +1,71 @@
+{
+  "template" : "bnp_logs",
+  "mappings" : {
+    "_default_": {
+      "properties" : {
+        "correlationId" : {
+          "type" : "string"
+        },
+        "host": {
+          "type" : "string"
+        },
+        "message": {
+          "type" : "string",
+          "index": "not_analyzed"
+        },
+        "serviceName": {
+          "type" : "string"
+        },
+        "serviceInstanceId": {
+          "type" : "string"
+        },
+        "userId": {
+          "type" : "string"
+        },
+        "type": {
+          "type" : "string"
+        },
+        "dataType": {
+          "type" : "string",
+          "index": "not_analyzed"
+        },
+        "request": {
+          "properties": {
+            "requestPath": {
+              "type" : "string"
+            },
+            "requestMethod": {
+              "type" : "string"
+            },
+            "requestUri": {
+              "type" : "string"
+            },
+            "queryString": {
+              "type" : "string"
+            },
+            "cookie": {
+              "type" : "string"
+            }
+          }
+        },
+        "response": {
+          "properties": {
+            "status": {
+              "type" : "integer"
+            }
+          }
+        },
+        "hostIdentity": {
+          "properties": {
+            "clientIp": {
+              "type": "string"
+            },
+            "userAgent": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

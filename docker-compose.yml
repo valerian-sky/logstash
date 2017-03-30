@@ -1,0 +1,21 @@
+version: '2'
+services:
+  logstash:
+    build:
+      context: ./logstash
+      args:
+        ELASTICSEARCH_IP: $ELASTICSEARCH_IP
+    depends_on:
+      - registrator
+    ports:
+      - "5000:5000/udp"
+      - "12201:12201/udp"
+    environment:
+      ELASTICSEARCH_IP: $ELASTICSEARCH_IP
+
+  registrator:
+    image: gliderlabs/registrator
+    # network_mode: bridge
+    command: -ip ${HOST} consul://${HOST}:8500
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock

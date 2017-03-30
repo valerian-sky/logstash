@@ -1,0 +1,158 @@
+# input from where to receive the input from
+input {
+	udp {
+		port => 5000
+		codec => "json"
+		type => gateway
+	}
+	gelf {
+		type => service
+		port => 12201
+	}
+}
+
+filter {
+	if [type] == "syslog" or [type] == "service" {
+	  if [type] == "syslog" and [severity] <= 4 and [severity] >= 2 {
+	    grok {
+				match => ["message", "<%{INT}>%{GREEDYDATA:message}"]
+	    	overwrite => ["message"]
+	    }
+	  } else if [type] == "service" {
+			json {
+		    source => "message"
+		    target => "custommessage"
+	  	}
+		}
+
+		if "_jsonparsefailure" in [tags] {
+			mutate {
+				remove_tag => ["_jsonparsefailure"]
+				remove_field => ["custommessage"]
+				add_field => {"dataType" => "string"}
+			}
+		} else {
+			mutate {
+				remove_field => ["message"]
+			}
+			#TODO - level needs to be used - Error, info, warning
+			if [custommessage][userId] {
+				mutate {
+					add_field => {"userId" => "%{[custommessage][userId]}"}
+				}
+			}
+			if [custommessage][correlationId] {
+				mutate {
+					add_field => {"correlationId" => "%{[custommessage][correlationId]}"}
+				}
+			}
+			if [custommessage][serviceName] {
+				mutate {
+					add_field => {"serviceName" => "%{[custommessage][serviceName]}"}
+				}
+			}
+			if [custommessage][serviceInstanceId] {
+				mutate {
+					add_field => {"serviceInstanceId" => "%{[custommessage][serviceInstanceId]}"}
+				}
+			}
+			if [custommessage][message] {
+				mutate {
+					add_field => {"message" => "%{[custommessage][message]}"}
+				}
+			}
+			mutate {
+				add_field => {"dataType" => "json"}
+			}
+			mutate {
+				remove_field => ["custommessage"]
+			}
+		}
+	}
+	else if [type] == "gateway" {
+		if ([request][headers[x-user-email]) {
+			mutate {
+				add_field => {
+					"userId" => "%{[request][headers[x-user-email]}"
+				}
+			}
+		}
+		mutate {
+			#identity
+			add_field => { "[correlationId]" => "%{[request][headers[correlation-id]]}" }
+
+			# host identity
+			add_field => { "[hostIdentity][clientIp]" => "%{[client_ip]}" }
+			add_field => { "[hostIdentity][userAgent]" => "%{[request][headers[user-agent]]}" }
+
+			#request
+			add_field => { "[requestdata][requestPath]" => "%{[api][request_path]}" }
+			add_field => { "[requestdata][requestMethod]" => "%{request][method]}" }
+			add_field => { "[requestdata][requestUri]" => "%{[request][request_uri]}" }
+			add_field => { "[requestdata][queryString]" => "%{[request][querystring]}" }
+			add_field => { "[requestdata][cookie]" => "%{[request][headers[cookie]]}" }
+
+			#response
+			add_field => { "[responsedata][status]" => "%{[response][status]}" }
+		}
+		prune {
+			#whitelist only these items
+			whitelist_names => ["responsedata", "requestdata", "correlationId", "@timestamp", "host", "hostIdentity", "level"]
+		}
+		mutate {
+			#rename them back to the original object name
+			rename => { "requestdata" => "request" }
+			rename => { "responsedata" => "response" }
+			add_field => {"dataType" => "json"}
+		}
+	}
+
+	#log level to string for better process, since logging is using string instead of number
+	if [level] == 3 or [level] == 200 {
+		mutate {
+			replace => {"level" => "error"}
+		}
+	} else if [level] == 4 or [level] == 300 {
+		mutate {
+			replace => {"level" => "warn"}
+		}
+	} else if [level] == 400 {
+		mutate {
+			replace => {"level" => "info"}
+		}
+	} else if [level] == 500 {
+		mutate {
+			replace => {"level" => "debug"}
+		}
+	} else if [level] == 600 {
+		mutate {
+			replace => {"level" => "trace"}
+		}
+	} else {
+		mutate {
+			replace => {"level" => "info"}
+		}
+	}
+}
+
+#output, to be produced for elasticsearch
+output {
+	if [hostIdentity] {
+		elasticsearch {
+			hosts => "#ELASTICSEARCH_URL#"
+			template => "/etc/logstash/bnp-logs.json"
+			template_overwrite => true
+			template_name => "bnp_logs"
+			index => "bnp_logs"
+			document_type => "gateway"
+		}
+	} else {
+		elasticsearch {
+			hosts => "#ELASTICSEARCH_URL#"
+			template => "/etc/logstash/bnp-logs.json"
+			template_overwrite => true
+			template_name => "bnp_logs"
+			index => "bnp_logs"
+		}
+	}
+}
