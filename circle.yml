@@ -8,6 +8,10 @@ machine:
 dependencies:
   override:
     - docker info
+    - >
+      if [ -n "${RUN_NIGHTLY_BUILD}" ]; then
+        echo "running base img build..." && docker build --rm=false -t ocbesbn/logstash-base:latest -f Dockerfile.base .
+      fi
     - docker build --rm=false -t ocbesbn/logstash:latest .
 
 test:
@@ -28,6 +32,10 @@ deployment:
     branch: master
     commands:
       - docker login -u $DOCKER_USER -p $DOCKER_PASS -e $DOCKER_EMAIL
+      - >
+        if [ -n "${RUN_NIGHTLY_BUILD}" ]; then
+          echo "running base img deploy..." && docker push ocbesbn/logstash-base:latest
+        fi
       - docker push ocbesbn/logstash:latest
       # - chmod +x deploy.sh
       # - ./deploy.sh

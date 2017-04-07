@@ -1,0 +1,5 @@
+#from base logstash
+FROM logstash:5
+
+#Install prune
+RUN logstash-plugin install logstash-filter-prune

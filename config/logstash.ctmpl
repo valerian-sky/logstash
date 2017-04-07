@@ -86,7 +86,8 @@ filter {
 			add_field => { "[hostIdentity][userAgent]" => "%{[request][headers[user-agent]]}" }
 
 			#request
-			add_field => { "[requestdata][requestPath]" => "%{[api][request_path]}" }
+			add_field => { "[requestdata][kong][upstreamURL]" => "%{[api][upstream_url]}" }
+			add_field => { "[requestdata][kong][uris]" => "%{[api][uris]}" }
 			add_field => { "[requestdata][requestMethod]" => "%{request][method]}" }
 			add_field => { "[requestdata][requestUri]" => "%{[request][request_uri]}" }
 			add_field => { "[requestdata][queryString]" => "%{[request][querystring]}" }

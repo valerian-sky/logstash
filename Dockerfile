@@ -1,6 +1,6 @@
 #from base logstash
 
-FROM logstash:5
+FROM ocbesbn/logstash-base
 
 # ELASTICSEARCH_IP Argument for elastic search
 ARG ELASTICSEARCH_IP
@@ -18,9 +18,6 @@ COPY entrypoint.sh /entrypoint.sh
 
 #change mode
 RUN chmod +x /entrypoint.sh
-
-#Install prune
-RUN logstash-plugin install logstash-filter-prune
 
 #Command to execute
 CMD /entrypoint.sh logstash -f /etc/logstash/conf.d/logstash.conf
