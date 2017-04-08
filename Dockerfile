@@ -23,6 +23,6 @@ RUN chmod +x /entrypoint.sh
 RUN logstash-plugin install logstash-filter-prune
 
 #Command to execute
-CMD /entrypoint.sh logstash -f /etc/logstash/conf.d/logstash.conf
+CMD /entrypoint.sh logstash --http.host 0.0.0.0 -f /etc/logstash/conf.d/logstash.conf
 
-EXPOSE 5000/udp 12201/udp
+EXPOSE 5000/udp 12201/udp 9600
