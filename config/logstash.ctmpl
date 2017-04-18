@@ -1,12 +1,8 @@
 # input from where to receive the input from
 input {
-	udp {
-		port => 5000
-		codec => "json"
-		type => gateway
-	}
 	gelf {
 		type => service
+		codec => "json"
 		port => 12201
 	}
 }
@@ -30,6 +26,46 @@ filter {
 				remove_tag => ["_jsonparsefailure"]
 				remove_field => ["custommessage"]
 				add_field => {"dataType" => "string"}
+			}
+		} else if [custommessage][api][upstream_url] { #gateway file logs
+			mutate {
+		    replace => { "type" => "gateway" }
+		  }
+			if ([custommessage][request][headers[x-user-email]) {
+				mutate {
+					add_field => {
+						"userId" => "%{[custommessage][request][headers[x-user-email]}"
+					}
+				}
+			}
+			mutate {
+				#identity
+				add_field => { "[correlationId]" => "%{[custommessage][request][headers[correlation-id]]}" }
+
+				# host identity
+				add_field => { "[hostIdentity][clientIp]" => "%{[custommessage][client_ip]}" }
+				add_field => { "[hostIdentity][userAgent]" => "%{[custommessage][request][headers[user-agent]]}" }
+
+				#request
+				add_field => { "[requestdata][kong][upstreamURL]" => "%{[custommessage][api][upstream_url]}" }
+				add_field => { "[requestdata][kong][uris]" => "%{[custommessage][api][uris]}" }
+				add_field => { "[requestdata][requestMethod]" => "%{[custommessage][request][method]}" }
+				add_field => { "[requestdata][requestUri]" => "%{[custommessage][request][request_uri]}" }
+				add_field => { "[requestdata][queryString]" => "%{[custommessage][request][querystring]}" }
+				add_field => { "[requestdata][cookie]" => "%{[custommessage][request][headers[cookie]]}" }
+
+				#response
+				add_field => { "[responsedata][status]" => "%{[custommessage][response][status]}" }
+			}
+			prune {
+				#whitelist only these items
+				whitelist_names => ["responsedata", "requestdata", "correlationId", "@timestamp", "host", "hostIdentity", "level"]
+			}
+			mutate {
+				#rename them back to the original object name
+				rename => { "requestdata" => "request" }
+				rename => { "responsedata" => "response" }
+				add_field => {"dataType" => "json"}
 			}
 		} else {
 			mutate {
@@ -67,44 +103,6 @@ filter {
 			mutate {
 				remove_field => ["custommessage"]
 			}
-		}
-	}
-	else if [type] == "gateway" {
-		if ([request][headers[x-user-email]) {
-			mutate {
-				add_field => {
-					"userId" => "%{[request][headers[x-user-email]}"
-				}
-			}
-		}
-		mutate {
-			#identity
-			add_field => { "[correlationId]" => "%{[request][headers[correlation-id]]}" }
-
-			# host identity
-			add_field => { "[hostIdentity][clientIp]" => "%{[client_ip]}" }
-			add_field => { "[hostIdentity][userAgent]" => "%{[request][headers[user-agent]]}" }
-
-			#request
-			add_field => { "[requestdata][kong][upstreamURL]" => "%{[api][upstream_url]}" }
-			add_field => { "[requestdata][kong][uris]" => "%{[api][uris]}" }
-			add_field => { "[requestdata][requestMethod]" => "%{request][method]}" }
-			add_field => { "[requestdata][requestUri]" => "%{[request][request_uri]}" }
-			add_field => { "[requestdata][queryString]" => "%{[request][querystring]}" }
-			add_field => { "[requestdata][cookie]" => "%{[request][headers[cookie]]}" }
-
-			#response
-			add_field => { "[responsedata][status]" => "%{[response][status]}" }
-		}
-		prune {
-			#whitelist only these items
-			whitelist_names => ["responsedata", "requestdata", "correlationId", "@timestamp", "host", "hostIdentity", "level"]
-		}
-		mutate {
-			#rename them back to the original object name
-			rename => { "requestdata" => "request" }
-			rename => { "responsedata" => "response" }
-			add_field => {"dataType" => "json"}
 		}
 	}
 
