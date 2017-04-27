@@ -31,10 +31,10 @@ filter {
 			mutate {
 		    replace => { "type" => "gateway" }
 		  }
-			if ([custommessage][request][headers[x-user-email]) {
+			if ([custommessage][request][headers[x-user-id]) {
 				mutate {
 					add_field => {
-						"userId" => "%{[custommessage][request][headers[x-user-email]}"
+						"userId" => "%{[custommessage][request][headers[x-user-id]]}"
 					}
 				}
 			}
@@ -59,7 +59,7 @@ filter {
 			}
 			prune {
 				#whitelist only these items
-				whitelist_names => ["responsedata", "requestdata", "correlationId", "@timestamp", "host", "hostIdentity", "level", "image_name"]
+				whitelist_names => ["responsedata", "requestdata", "correlationId", "@timestamp", "host", "hostIdentity", "level", "image_name", "userId"]
 			}
 			mutate {
 				#rename them back to the original object name
