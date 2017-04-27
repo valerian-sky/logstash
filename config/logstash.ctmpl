@@ -59,7 +59,7 @@ filter {
 			}
 			prune {
 				#whitelist only these items
-				whitelist_names => ["responsedata", "requestdata", "correlationId", "@timestamp", "host", "hostIdentity", "level"]
+				whitelist_names => ["responsedata", "requestdata", "correlationId", "@timestamp", "host", "hostIdentity", "level", "image_name"]
 			}
 			mutate {
 				#rename them back to the original object name
