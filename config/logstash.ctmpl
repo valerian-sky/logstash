@@ -45,6 +45,31 @@ filter {
 					}
 				}
 			}
+			if ([custommessage][latencies]) {
+				mutate {
+					add_field => {
+						"[latency][request]" => "%{[custommessage][latencies[request]]}"
+					}
+					add_field => {
+						"[latency][kong]" => "%{[custommessage][latencies[kong]]}"
+					}
+					add_field => {
+						"[latency][service]" => "%{[custommessage][latencies[proxy]]}"
+					}
+				}
+			} else {
+				mutate {
+					add_field => {
+						"[latency][request]" => 0
+					}
+					add_field => {
+						"[latency][kong]" => 0
+					}
+					add_field => {
+						"[latency][service]" => 0
+					}
+				}
+			}
 			mutate {
 				#identity
 				add_field => { "[correlationId]" => "%{[custommessage][request][headers[correlation-id]]}" }
@@ -60,19 +85,35 @@ filter {
 				add_field => { "[requestdata][requestUri]" => "%{[custommessage][request][request_uri]}" }
 				add_field => { "[requestdata][queryString]" => "%{[custommessage][request][querystring]}" }
 				add_field => { "[requestdata][cookie]" => "%{[custommessage][request][headers[cookie]]}" }
+				add_field => { "[requestdata][started_at]" => "%{[custommessage][started_at]}" }
 
 				#response
 				add_field => { "[responsedata][status]" => "%{[custommessage][response][status]}" }
+
+
+			}
+			mutate {
+				convert => {"[responsedata][status]" => "integer"}
+				convert => {"[latency][request]" => "integer"}
+				convert => {"[latency][service]" => "integer"}
+				convert => {"[latency][kong]" => "integer"}
+				convert => {"[requestdata][started_at]" => "integer"}
 			}
 			prune {
 				#whitelist only these items
-				whitelist_names => ["responsedata", "requestdata", "correlationId", "@timestamp", "host", "hostIdentity", "level", "image_name", "userId", "userRoles"]
+				whitelist_names => ["responsedata", "requestdata", "correlationId", "@timestamp", "host", "hostIdentity", "level", "image_name", "userId", "userRoles", "latency", "tag"]
+			}
+			ruby {
+			  code => "event.set('[latency][total]', event.get('[latency][request]') + event.get('[latency][kong]') + event.get('[latency][service]'))"
+				# code => "event.cancel if rand <= 0.90"
 			}
 			mutate {
 				#rename them back to the original object name
 				rename => { "requestdata" => "request" }
 				rename => { "responsedata" => "response" }
 				add_field => {"dataType" => "json"}
+				#message
+				add_field => { "[message]" => "%{[request][requestUri]} - %{[response][status]}, %{[latency][total]}" }
 			}
 		} else {
 			mutate {

@@ -29,6 +29,22 @@
           "type" : "string",
           "index": "not_analyzed"
         },
+        "latency": {
+          "properties": {
+            "request": {
+              "type": "integer"
+            },
+            "service": {
+              "type": "integer"
+            },
+            "kong": {
+              "type": "integer"
+            },
+            "total": {
+              "type": "integer"
+            }
+          }
+        },
         "request": {
           "properties": {
             "requestPath": {
