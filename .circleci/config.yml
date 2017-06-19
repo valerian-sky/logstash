@@ -1,0 +1,100 @@
+version: 2
+workflows:
+  version: 2
+  build-test-and-deploy:
+  jobs:
+    - build
+    - deploy_develop:
+        requires:
+          - build
+
+jobs:
+  build:
+    docker:
+      - image: circleci/node:8
+    working_directory: ~/${CIRCLE_PROJECT_REPONAME}
+
+    steps:
+      - checkout
+      - setup_remote_docker
+
+      - run:
+          name: Build Docker image
+          command: docker build -t opuscapita/${CIRCLE_PROJECT_REPONAME}:latest .
+
+      - deploy:
+          name: deploy branch
+          command: echo "expect deploy_develop next"
+                
+  build_base:
+    docker:
+      - image: circleci/node:8
+    working_directory: ~/${CIRCLE_PROJECT_REPONAME}
+
+    steps:
+      - checkout
+      - setup_remote_docker
+      - deploy:
+          name: Build and push Docker base image
+          command: |
+            docker build -t opuscapita/$CIRCLE_PROJECT_REPONAME:base -f Dockerfile.base .
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            docker push opuscapita/$CIRCLE_PROJECT_REPONAME:base
+
+
+  deploy_develop:
+    branches:
+      only:
+        - develop
+    docker:
+      - image: circleci/node:8
+    working_directory: ~/${CIRCLE_PROJECT_REPONAME}
+
+    steps:
+      - checkout
+
+      - run:
+          name: commit new version
+          command: |
+            version=`cat VERSION`-dev-$CIRCLE_BUILD_NUM
+            git config --global user.email "ci@circleci.com"
+            git config --global user.name "CI"
+            git tag -a "$version" -m "$version"
+            git push --tags
+
+      - setup_remote_docker
+
+      - run:
+          name: Build and push Docker image
+          command: |
+            version=`cat VERSION`-dev-$CIRCLE_BUILD_NUM
+            docker build -t opuscapita/$CIRCLE_PROJECT_REPONAME:$version --build-arg CI="true"  .
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            docker push opuscapita/$CIRCLE_PROJECT_REPONAME:$version
+
+      - run:
+          name: deploy new image to dev
+          command: |
+            version=`cat VERSION`-dev-$CIRCLE_BUILD_NUM
+            curl https://raw.githubusercontent.com/gr4per/azureswarm/master/deploy_service.sh > deploy_service.sh
+            chmod +x deploy_service.sh
+            ./deploy_service.sh dm develop opuscapita/$CIRCLE_PROJECT_REPONAME $version
+
+      - run:
+          name: Integrations tests
+          command: |
+            if docker run -it -e "TESTING_URL=http://$(./public_ip.sh)" opuscapita/test-flow; then
+              echo "Integration tests passed"
+            else
+              curl https://raw.githubusercontent.com/gr4per/azureswarm/master/rollback_service.sh > rollback_service.sh
+              chmod +x rollback_service.sh
+              ./rollback_service.sh dm $(./public_ip.sh) opuscapita/$CIRCLE_PROJECT_REPONAME
+              exit 1
+            fi
+
+      - run:
+          name: Open PR from develop to master
+          command: |
+            curl -H 'Authorization: token '$GITHUB_TOKEN \
+              --data '{"title":"[Release '`date +%d.%m.%Y`']","base":"master","head":"develop"}' \
+              https://api.github.com/repos/opuscapita/$CIRCLE_PROJECT_REPONAME/pulls
