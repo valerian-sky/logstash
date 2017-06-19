@@ -25,7 +25,7 @@ jobs:
             fi
             echo "version=$version, targetEnv=stage"
             #git config --global user.email "ci@circleci.com"
-            git config --global user.name "gr4per"
+            #git config --global user.name "gr4per"
             git tag -a "$version" -m "$version"
             git push --tags
 
