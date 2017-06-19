@@ -89,3 +89,11 @@ jobs:
               --data '{"title":"[Release '`date +%d.%m.%Y`']","base":"master","head":"develop"}' \
               https://api.github.com/repos/opuscapita/$CIRCLE_PROJECT_REPONAME/pulls
 
+workflows:
+  version: 2
+  build-test-and-deploy:
+    jobs:
+      - build
+      - deploy_develop:
+          requires:
+            - build
