@@ -33,9 +33,6 @@ jobs:
             docker push opuscapita/$CIRCLE_PROJECT_REPONAME:base
 
   deploy_develop:
-    branches:
-      only:
-        - develop
     docker:
       - image: circleci/node:8
     working_directory: ~/logstash
