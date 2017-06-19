@@ -25,7 +25,6 @@ jobs:
       - deploy:
           name: deploy branch
           command: echo "expect deploy_develop next"
-                
 
   build_base:
     docker:
@@ -42,14 +41,13 @@ jobs:
             docker login -u $DOCKER_USER -p $DOCKER_PASS
             docker push opuscapita/$CIRCLE_PROJECT_REPONAME:base
 
-
   deploy_develop:
     branches:
       only:
         - develop
     docker:
       - image: circleci/node:8
-    working_directory: ~/${CIRCLE_PROJECT_REPONAME}
+    working_directory: ~/logstash
 
     steps:
       - checkout
