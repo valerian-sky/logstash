@@ -1,0 +1,153 @@
+[
+    {
+        "ID": "mofxg3nq2bm8qdkp8w8sb96t6",
+        "Version": {
+            "Index": 218
+        },
+        "CreatedAt": "2017-06-20T14:49:31.719485255Z",
+        "UpdatedAt": "2017-06-20T14:49:31.739803099Z",
+        "Spec": {
+            "Name": "logstash",
+            "Labels": {},
+            "TaskTemplate": {
+                "ContainerSpec": {
+                    "Image": "opuscapita/logstash:1.0.1-rc-58@sha256:f6974f3a4092874f9e0b9a6d0418cf5668b635a423e79a5c3770136b81f8bd94",
+                    "Env": [
+                        "SERVICE_9600_NAME=logstash",
+                        "SERVICE_9600_CHECK_HTTP=/",
+                        "SERVICE_9600_CHECK_INTERVAL=15s",
+                        "SERVICE_9600_CHECK_TIMEOUT=3s",
+                        "SERVICE_5000_NAME=logstash-udp",
+                        "SERVICE_12201_NAME=logstash-gelf",
+                        "ELASTICSEARCH_IP=elastic.service.consul",
+                        "NODE_ENV=production",
+                        "CONSUL_HOST=172.17.0.1"
+                    ],
+                    "StopGracePeriod": 10000000000,
+                    "DNSConfig": {},
+                    "Secrets": [
+                        {
+                            "File": {
+                                "Name": "logstash-consul-key",
+                                "UID": "0",
+                                "GID": "0",
+                                "Mode": 292
+                            },
+                            "SecretID": "tcesalgh708734h6hxu45if6a",
+                            "SecretName": "logstash-consul-key"
+                        }
+                    ]
+                },
+                "Resources": {
+                    "Limits": {},
+                    "Reservations": {}
+                },
+                "RestartPolicy": {
+                    "Condition": "any",
+                    "Delay": 5000000000,
+                    "MaxAttempts": 0
+                },
+                "Placement": {
+                    "Constraints": [
+                        "node.role==worker"
+                    ]
+                },
+                "LogDriver": {
+                    "Name": "gelf",
+                    "Options": {
+                        "gelf-address": "udp://10.26.17.7:12201",
+                        "tag": "logstash"
+                    }
+                },
+                "ForceUpdate": 0
+            },
+            "Mode": {
+                "Replicated": {
+                    "Replicas": 1
+                }
+            },
+            "UpdateConfig": {
+                "Parallelism": 1,
+                "FailureAction": "pause",
+                "Monitor": 5000000000,
+                "MaxFailureRatio": 0,
+                "Order": "stop-first"
+            },
+            "RollbackConfig": {
+                "Parallelism": 1,
+                "FailureAction": "pause",
+                "Monitor": 5000000000,
+                "MaxFailureRatio": 0,
+                "Order": "stop-first"
+            },
+            "EndpointSpec": {
+                "Mode": "vip",
+                "Ports": [
+                    {
+                        "Protocol": "tcp",
+                        "TargetPort": 9600,
+                        "PublishedPort": 9600,
+                        "PublishMode": "host"
+                    },
+                    {
+                        "Protocol": "udp",
+                        "TargetPort": 5000,
+                        "PublishedPort": 5000,
+                        "PublishMode": "host"
+                    },
+                    {
+                        "Protocol": "udp",
+                        "TargetPort": 12201,
+                        "PublishedPort": 12201,
+                        "PublishMode": "host"
+                    }
+                ]
+            }
+        },
+        "Endpoint": {
+            "Spec": {
+                "Mode": "vip",
+                "Ports": [
+                    {
+                        "Protocol": "tcp",
+                        "TargetPort": 9600,
+                        "PublishedPort": 9600,
+                        "PublishMode": "host"
+                    },
+                    {
+                        "Protocol": "udp",
+                        "TargetPort": 5000,
+                        "PublishedPort": 5000,
+                        "PublishMode": "host"
+                    },
+                    {
+                        "Protocol": "udp",
+                        "TargetPort": 12201,
+                        "PublishedPort": 12201,
+                        "PublishMode": "host"
+                    }
+                ]
+            },
+            "Ports": [
+                {
+                    "Protocol": "tcp",
+                    "TargetPort": 9600,
+                    "PublishedPort": 9600,
+                    "PublishMode": "host"
+                },
+                {
+                    "Protocol": "udp",
+                    "TargetPort": 5000,
+                    "PublishedPort": 5000,
+                    "PublishMode": "host"
+                },
+                {
+                    "Protocol": "udp",
+                    "TargetPort": 12201,
+                    "PublishedPort": 12201,
+                    "PublishMode": "host"
+                }
+            ]
+        }
+    }
+]
