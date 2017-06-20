@@ -8,68 +8,17 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-
       - run:
-          name: Build Docker image
-          command: docker build -t opuscapita/${CIRCLE_PROJECT_REPONAME}:latest .
-
-      - run:
-          name: commit new version
+          name: Deployment script
           command: |
-            export targetEnv=develop
-            export version=`cat VERSION`-dev-$CIRCLE_BUILD_NUM
-            if [[ "$CIRCLE_BRANCH" == "master" ]]
-            then
-              export version=`cat VERSION`-rc-$CIRCLE_BUILD_NUM
-              export targetEnv=stage
-            fi
-            echo "version=$version, targetEnv=stage"
-            git config --global user.email "ci@circleci.com"
-            git config --global user.name "circleci"
-            git tag -a "$version" -m "$version"
-            git push --tags
-
-      - run:
-          name: Build and push Docker image
-          command: |
-            docker tag opuscapita/$CIRCLE_PROJECT_REPONAME:latest opuscapita/$CIRCLE_PROJECT_REPONAME:$version
-            docker login -u $DOCKER_USER -p $DOCKER_PASS
-            docker push opuscapita/$CIRCLE_PROJECT_REPONAME:$version
-
-      - run:
-          name: deploy new image to dev
-          command: |
-            curl https://raw.githubusercontent.com/gr4per/azureswarm/master/deploy_service.sh > deploy_service.sh
-            chmod +x deploy_service.sh
-            ./deploy_service.sh dm $targetEnv opuscapita/$CIRCLE_PROJECT_REPONAME $version
-            export public_ip=$(./public_ip.sh $targetEnv)
-
-      - run:
-          name: Integrations tests
-          command: |
-            if docker run -it -e "TESTING_URL=http://$public_ip" opuscapita/test-flow; then
-              echo "Integration tests passed"
-            else
-              curl https://raw.githubusercontent.com/gr4per/azureswarm/master/rollback_service.sh > rollback_service.sh
-              chmod +x rollback_service.sh
-              echo "integration tests failed, rolling back service..."
-              ./rollback_service.sh dm $public_ip opuscapita/$CIRCLE_PROJECT_REPONAME
-              exit 1
-            fi
-
-      - run:
-          name: Open PR from develop to master
-          command: |
-            if [[ "$CIRCLE_BRANCH" == "develop" ]]; then echo "merge to master"; fi
-            #curl -H 'Authorization: token '$GITHUB_TOKEN \
-            #  --data '{"title":"[Release '`date +%d.%m.%Y`']","base":"master","head":"develop"}' \
-            #  https://api.github.com/repos/opuscapita/$CIRCLE_PROJECT_REPONAME/pulls
-
+            curl https://raw.githubusercontent.com/gr4per/azureswarm/master/deploy.sh > deploy.sh
+            chmod +x deploy.sh
+            ./deploy.sh opuscapita/$CIRCLE_PROJECT_REPONAME
 
   build_base:
     docker:
       - image: circleci/node:8
-    working_directory: ~/${CIRCLE_PROJECT_REPONAME}
+    working_directory: ~/logstash
 
     steps:
       - checkout
