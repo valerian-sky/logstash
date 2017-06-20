@@ -24,8 +24,7 @@ services:
 
   registrator:
     image: gliderlabs/registrator
-    # network_mode: bridge
-    command: -ip ${HOST} consul://${HOST}:8500
+    command: consul://consul:8500
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock
     depends_on:
@@ -33,12 +32,11 @@ services:
 
   consul:
     image: consul:latest
-    network_mode: host
     ports:
       - '8400:8400'
       - '8500:8500'
       - '8600:53/udp'
     labels:
       SERVICE_IGNORE: 'true'  # Do not add any of Consul's services to Consul's service discovery registry.
-    command: [agent, '-server', '-ui', '-bootstrap-expect=1', '-bind=${HOST}', '-client=0.0.0.0']
+    command: [agent, '-server', '-ui', '-bootstrap-expect=1', '-client=0.0.0.0']
 
