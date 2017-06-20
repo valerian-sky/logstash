@@ -1,6 +1,6 @@
 version: '2'
 services:
-  logstash:
+  main:
     build:
       context: .
       args:
