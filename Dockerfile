@@ -23,3 +23,5 @@ RUN chmod +x /entrypoint.sh
 CMD /entrypoint.sh logstash --http.host 0.0.0.0 -f /etc/logstash/conf.d/logstash.conf
 
 EXPOSE 5000/udp 12201/udp 9600
+
+HEALTHCHECK CMD curl --fail http://localhost:9600/ || exit 1
