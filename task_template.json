@@ -1,0 +1,24 @@
+{
+  "default":{
+    "name":"${serviceName}",
+    "log-driver":"gelf",
+    "log-opt":["gelf-address=udp://${logstash_ip}:12201", "tag=\"${serviceName}\""],
+    "constraint":["node.role==worker"],
+    "publish":["mode=host,target=9600,published=9600,protocol=tcp",
+               "mode=host,target=5000,published=5000,protocol=udp",
+               "mode=host,target=12201,published=12201,protocol=udp"],
+    "env":["SERVICE_9600_NAME=logstash",
+           "SERVICE_9600_CHECK_HTTP=/",
+           "SERVICE_9600_CHECK_INTERVAL=15s",
+           "SERVICE_9600_CHECK_TIMEOUT=3s",
+           "SERVICE_5000_NAME=logstash-udp",
+           "SERVICE_12201_NAME=logstash-gelf",
+           "ELASTICSEARCH_IP=elastic.service.consul",
+           "NODE_ENV=production",
+           "CONSUL_HOST=172.17.0.1"
+           ],
+    "constraint":["node.role==worker"]
+  },
+  "prod":{
+  }
+}
