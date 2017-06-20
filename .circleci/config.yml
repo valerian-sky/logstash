@@ -3,7 +3,7 @@ jobs:
   build:
     docker:
       - image: circleci/node:8
-    working_directory: ~/logstash
+    working_directory: ~/build
 
     steps:
       - checkout
@@ -20,7 +20,7 @@ jobs:
   build_base:
     docker:
       - image: circleci/node:8
-    working_directory: ~/logstash
+    working_directory: ~/build
 
     steps:
       - checkout
