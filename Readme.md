@@ -82,6 +82,11 @@ E.g: For BNP
 ------
 ElasticSearch related
 -----
+See
+https://www.elastic.co/guide/en/logstash/5.4/plugins-outputs-elasticsearch.html
+
+the elasticsearch plugin actually allows to set DNS ttl and thus we can give elasticsearch.service.consul
+as hostname. 
 
 **Description :** IP for the elastic search instance
 
