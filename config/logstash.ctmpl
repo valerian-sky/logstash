@@ -130,17 +130,17 @@ filter {
 					add_field => {"correlationId" => "%{[custommessage][correlationId]}"}
 				}
 			}
-                        if [custommessage][method] {
-                                mutate {
-                                        add_field => {"method" => "%{[custommessage][method]}"}
-                                }
-                        }
-                        if [custommessage][requestUri] {
-                                mutate {
-                                        add_field => {"requestUri" => "%{[custommessage][requestUri]}"}
-                                }
-                        }			
-                        if [custommessage][serviceName] {
+      if [custommessage][method] {
+          mutate {
+            add_field => {"[requestdata][requestMethod]" => "%{[custommessage][method]}"}
+          }
+      }
+      if [custommessage][requestUri] {
+          mutate {
+            add_field => {"[requestdata][requestUri]" => "%{[custommessage][requestUri]}"}
+          }
+      }
+      if [custommessage][serviceName] {
 				mutate {
 					add_field => {"serviceName" => "%{[custommessage][serviceName]}"}
 				}
