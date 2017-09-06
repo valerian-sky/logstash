@@ -157,8 +157,7 @@ filter {
 			}
 			mutate {
 				add_field => {"dataType" => "json"}
-			}
-			mutate {
+				rename => { "requestdata" => "request" }
 				remove_field => ["custommessage"]
 			}
 		}
