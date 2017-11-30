@@ -208,7 +208,7 @@ output {
 			template => "/etc/logstash/bnp-logs.json"
 			template_overwrite => true
 			template_name => "bnp_logs"
-			index => "bnp_logs"
+			index => "bnp_logs-%{+YYYY.MM.dd}"
 		}
 	}
 }
